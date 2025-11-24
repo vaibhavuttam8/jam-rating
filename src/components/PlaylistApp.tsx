@@ -128,6 +128,7 @@ export default function PlaylistApp() {
   const [playlistDescription, setPlaylistDescription] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [albumArtCache, setAlbumArtCache] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
@@ -179,23 +180,49 @@ export default function PlaylistApp() {
       setSearchResults(recordings);
       setTotalResults(data.count || 0);
       setCurrentPage(page);
+      setLoading(false); // Set loading to false immediately after getting results
       
-      // Fetch album art for each recording
-      const artCache: Record<string, string> = { ...albumArtCache };
-      for (const recording of recordings) {
-        if (recording.releases?.[0]?.id && !artCache[recording.id]) {
-          const albumArt = await fetchAlbumArt(recording.releases[0].id);
-          if (albumArt) {
-            artCache[recording.id] = albumArt;
-          }
+      // Fetch album art for each recording in parallel (in background)
+      const recordingsToFetch = recordings.filter(
+        (recording: Recording) => recording.releases?.[0]?.id && !albumArtCache[recording.id]
+      );
+      
+      // Mark images as loading
+      const loadingState: Record<string, boolean> = {};
+      recordingsToFetch.forEach((recording: Recording) => {
+        loadingState[recording.id] = true;
+      });
+      setLoadingImages(loadingState);
+      
+      // Fetch all album art in parallel
+      const fetchPromises = recordingsToFetch.map(async (recording: Recording) => {
+        try {
+          const albumArt = await fetchAlbumArt(recording.releases![0].id);
+          return { recordingId: recording.id, albumArt };
+        } catch (error) {
+          console.error(`Failed to fetch album art for ${recording.id}:`, error);
+          return { recordingId: recording.id, albumArt: null };
         }
-      }
-      setAlbumArtCache(artCache);
+      });
+      
+      // Update cache as images come in
+      const results = await Promise.all(fetchPromises);
+      const newCache: Record<string, string> = { ...albumArtCache };
+      const newLoadingState: Record<string, boolean> = { ...loadingImages };
+      
+      results.forEach(({ recordingId, albumArt }) => {
+        if (albumArt) {
+          newCache[recordingId] = albumArt;
+        }
+        newLoadingState[recordingId] = false;
+      });
+      
+      setAlbumArtCache(newCache);
+      setLoadingImages(newLoadingState);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
       setTotalResults(0);
-    } finally {
       setLoading(false);
     }
   };
@@ -372,7 +399,11 @@ export default function PlaylistApp() {
                       key={song.id}
                       className="p-4 flex gap-3 items-start hover:shadow-md transition-all"
                     >
-                      {albumArtCache[song.id] ? (
+                      {loadingImages[song.id] ? (
+                        <div className="w-16 h-16 bg-muted border-2 border-border flex items-center justify-center flex-shrink-0">
+                          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      ) : albumArtCache[song.id] ? (
                         <img
                           src={albumArtCache[song.id]}
                           alt={`${song.title} album art`}
