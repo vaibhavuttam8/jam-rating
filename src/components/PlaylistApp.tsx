@@ -128,7 +128,15 @@ export default function PlaylistApp() {
   const [playlistName, setPlaylistName] = useState('My Playlist');
   const [playlistDescription, setPlaylistDescription] = useState('');
   const [editingName, setEditingName] = useState(false);
-  const [albumArtCache, setAlbumArtCache] = useState<Record<string, string>>({});
+  const [albumArtCache, setAlbumArtCache] = useState<Record<string, string>>(() => {
+    // Initialize from localStorage for instant loading
+    try {
+      const cached = localStorage.getItem('albumArtCache');
+      return cached ? JSON.parse(cached) : {};
+    } catch {
+      return {};
+    }
+  });
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
@@ -140,17 +148,39 @@ export default function PlaylistApp() {
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
 
-  const fetchAlbumArt = async (releaseId: string): Promise<string | null> => {
+  // Persist album art cache to localStorage
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('albumArtCache', JSON.stringify(albumArtCache));
+    } catch (error) {
+      console.error('Failed to save cache:', error);
+    }
+  }, [albumArtCache]);
+
+  const fetchAlbumArt = async (releaseId: string, recordingId: string): Promise<string | null> => {
     try {
       const response = await fetch(
-        `https://coverartarchive.org/release/${releaseId}`
+        `https://coverartarchive.org/release/${releaseId}`,
+        {
+          // Use cache-first strategy for faster repeated loads
+          cache: 'force-cache',
+        }
       );
       if (response.ok) {
         const data = await response.json();
-        return data.images?.[0]?.thumbnails?.small || data.images?.[0]?.image || null;
+        const albumArt = data.images?.[0]?.thumbnails?.small || data.images?.[0]?.image || null;
+        
+        // Update cache immediately as each image loads (progressive loading)
+        if (albumArt) {
+          setAlbumArtCache(prev => ({ ...prev, [recordingId]: albumArt }));
+          setLoadingImages(prev => ({ ...prev, [recordingId]: false }));
+        }
+        
+        return albumArt;
       }
     } catch (error) {
       console.error('Album art fetch error:', error);
+      setLoadingImages(prev => ({ ...prev, [recordingId]: false }));
     }
     return null;
   };
@@ -199,31 +229,14 @@ export default function PlaylistApp() {
       });
       setLoadingImages(loadingState);
       
-      // Fetch all album art in parallel
-      const fetchPromises = recordingsToFetch.map(async (recording: Recording) => {
-        try {
-          const albumArt = await fetchAlbumArt(recording.releases![0].id);
-          return { recordingId: recording.id, albumArt };
-        } catch (error) {
+      // Fetch all album art in parallel with progressive loading
+      // Images will appear as soon as they're fetched (no waiting for all)
+      recordingsToFetch.forEach((recording: Recording) => {
+        fetchAlbumArt(recording.releases![0].id, recording.id).catch(error => {
           console.error(`Failed to fetch album art for ${recording.id}:`, error);
-          return { recordingId: recording.id, albumArt: null };
-        }
+          setLoadingImages(prev => ({ ...prev, [recording.id]: false }));
+        });
       });
-      
-      // Update cache as images come in
-      const results = await Promise.all(fetchPromises);
-      const newCache: Record<string, string> = { ...albumArtCache };
-      const newLoadingState: Record<string, boolean> = { ...loadingImages };
-      
-      results.forEach(({ recordingId, albumArt }) => {
-        if (albumArt) {
-          newCache[recordingId] = albumArt;
-        }
-        newLoadingState[recordingId] = false;
-      });
-      
-      setAlbumArtCache(newCache);
-      setLoadingImages(newLoadingState);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
@@ -424,6 +437,8 @@ export default function PlaylistApp() {
                           src={albumArtCache[song.id]}
                           alt={`${song.title} album art`}
                           className="w-16 h-16 object-cover border-2 border-border shadow-sm flex-shrink-0"
+                          loading="eager"
+                          decoding="async"
                         />
                       ) : (
                         <div className="w-16 h-16 bg-muted border-2 border-border flex items-center justify-center flex-shrink-0">
@@ -558,6 +573,8 @@ export default function PlaylistApp() {
                             src={song.albumArt}
                             alt={`${song.title} album art`}
                             className="w-12 h-12 object-cover border-2 border-border shadow-sm flex-shrink-0"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <div className="w-12 h-12 bg-muted border-2 border-border flex items-center justify-center flex-shrink-0">
@@ -629,6 +646,8 @@ export default function PlaylistApp() {
                                 src={song.albumArt}
                                 alt={`${song.title} album art`}
                                 className="w-12 h-12 object-cover border-2 border-border shadow-sm flex-shrink-0"
+                                loading="lazy"
+                                decoding="async"
                               />
                             ) : (
                               <div className="w-12 h-12 bg-muted border-2 border-border flex items-center justify-center flex-shrink-0">
