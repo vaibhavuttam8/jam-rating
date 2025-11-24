@@ -121,6 +121,7 @@ const mockAPI = {
 export default function PlaylistApp() {
   const [songName, setSongName] = useState('');
   const [artistName, setArtistName] = useState('');
+  const [albumName, setAlbumName] = useState('');
   const [searchResults, setSearchResults] = useState<Recording[]>([]);
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -155,7 +156,7 @@ export default function PlaylistApp() {
   };
 
   const searchSongs = async (page: number = 1) => {
-    if (!songName.trim() && !artistName.trim()) return;
+    if (!songName.trim() && !artistName.trim() && !albumName.trim()) return;
     setLoading(true);
     try {
       // Build the query based on what fields are filled
@@ -167,6 +168,10 @@ export default function PlaylistApp() {
       
       if (artistName.trim()) {
         queryParts.push(`artist:"${artistName.trim()}"`);
+      }
+      
+      if (albumName.trim()) {
+        queryParts.push(`release:"${albumName.trim()}"`);
       }
       
       const query = queryParts.join(' AND ');
@@ -356,7 +361,7 @@ export default function PlaylistApp() {
               </CardHeader>
               
               <div className="mb-6 space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-1">Song Name</label>
                     <Input
@@ -379,10 +384,21 @@ export default function PlaylistApp() {
                       className="w-full"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Album Name</label>
+                    <Input
+                      type="text"
+                      value={albumName}
+                      onChange={(e) => setAlbumName(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Enter album name..."
+                      className="w-full"
+                    />
+                  </div>
                 </div>
                 <Button
                   onClick={() => searchSongs(1)}
-                  disabled={loading || (!songName.trim() && !artistName.trim())}
+                  disabled={loading || (!songName.trim() && !artistName.trim() && !albumName.trim())}
                   size="md"
                   className="gap-2 w-full md:w-auto"
                 >
@@ -432,10 +448,10 @@ export default function PlaylistApp() {
                       </Button>
                     </Card>
                   ))
-                ) : (songName || artistName) ? (
+                ) : (songName || artistName || albumName) ? (
                   <p className="text-muted-foreground text-center py-8">No songs found. Try another search!</p>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">Enter a song name or artist to get started</p>
+                  <p className="text-muted-foreground text-center py-8">Enter a song name, artist, or album to get started</p>
                 )}
               </div>
 
