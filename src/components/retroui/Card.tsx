@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import React, { type HTMLAttributes } from "react";
 
-export interface ICardProps extends HTMLAttributes<HTMLDivElement> {}
+export type ICardProps = HTMLAttributes<HTMLDivElement>;
 
 export const Card = React.forwardRef<HTMLDivElement, ICardProps>(
   ({ className = "", ...props }: ICardProps, forwardedRef) => {
@@ -20,7 +20,7 @@ export const Card = React.forwardRef<HTMLDivElement, ICardProps>(
 
 Card.displayName = "Card";
 
-export interface ICardHeaderProps extends HTMLAttributes<HTMLDivElement> {}
+export type ICardHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 export const CardHeader = React.forwardRef<HTMLDivElement, ICardHeaderProps>(
   ({ className = "", ...props }: ICardHeaderProps, forwardedRef) => {
@@ -36,7 +36,7 @@ export const CardHeader = React.forwardRef<HTMLDivElement, ICardHeaderProps>(
 
 CardHeader.displayName = "CardHeader";
 
-export interface ICardTitleProps extends HTMLAttributes<HTMLHeadingElement> {}
+export type ICardTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
 export const CardTitle = React.forwardRef<HTMLHeadingElement, ICardTitleProps>(
   ({ className = "", ...props }: ICardTitleProps, forwardedRef) => {
@@ -52,7 +52,7 @@ export const CardTitle = React.forwardRef<HTMLHeadingElement, ICardTitleProps>(
 
 CardTitle.displayName = "CardTitle";
 
-export interface ICardContentProps extends HTMLAttributes<HTMLDivElement> {}
+export type ICardContentProps = HTMLAttributes<HTMLDivElement>;
 
 export const CardContent = React.forwardRef<HTMLDivElement, ICardContentProps>(
   ({ className = "", ...props }: ICardContentProps, forwardedRef) => {

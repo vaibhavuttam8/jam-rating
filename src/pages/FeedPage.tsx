@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Music } from 'lucide-react';
 import { Button } from '@/components/retroui/Button';
@@ -8,12 +8,10 @@ import type { PlaylistPost as PlaylistPostType } from '@/types';
 import { PlaylistPost } from '@/components/PlaylistPost';
 
 export const FeedPage: React.FC = () => {
-  const [playlistPosts, setPlaylistPosts] = useState<PlaylistPostType[]>([]);
+  const [playlistPosts, setPlaylistPosts] = useState<PlaylistPostType[]>(() => 
+    mockAPI.getAllPlaylists()
+  );
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setPlaylistPosts(mockAPI.getAllPlaylists());
-  }, []);
 
   const handleUpvote = (playlistId: string) => {
     mockAPI.upvotePlaylist(playlistId);

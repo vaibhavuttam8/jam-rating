@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Music, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/retroui/Button';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 
 interface LayoutProps {
   children: React.ReactNode;
