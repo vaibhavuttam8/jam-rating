@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Music } from 'lucide-react';
+import { Music, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/retroui/Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-background p-6 font-sans">
@@ -22,6 +24,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <h1 className="text-4xl font-head font-bold text-foreground">JAM Rating</h1>
             </div>
             <div className="flex gap-2">
+              <Button
+                onClick={toggleTheme}
+                variant="outline"
+                size="icon"
+                aria-label="Toggle theme"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </Button>
               <Button
                 onClick={() => navigate('/create')}
                 variant={location.pathname === '/create' ? 'default' : 'outline'}
