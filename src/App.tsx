@@ -1,6 +1,18 @@
 import './App.css'
-import PlaylistApp from "@/components/PlaylistApp";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Layout } from '@/components/Layout';
+import { FeedPage } from '@/pages/FeedPage';
+import { CreatePlaylistPage } from '@/pages/CreatePlaylistPage';
 
 export default function App() {
-  return <PlaylistApp />;
+  return (
+    <BrowserRouter>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<FeedPage />} />
+          <Route path="/create" element={<CreatePlaylistPage />} />
+        </Routes>
+      </Layout>
+    </BrowserRouter>
+  );
 }
