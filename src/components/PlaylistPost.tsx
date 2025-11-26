@@ -42,6 +42,15 @@ export const PlaylistPost: React.FC<PlaylistPostProps> = ({
             </p>
           </div>
         </div>
+        {post.coverImage && (
+          <div className="mb-3">
+            <img
+              src={post.coverImage}
+              alt={`${post.name} cover`}
+              className="w-full max-h-64 object-cover rounded border-2 border-border"
+            />
+          </div>
+        )}
         {post.description && (
           <p className="text-foreground mb-3">{post.description}</p>
         )}

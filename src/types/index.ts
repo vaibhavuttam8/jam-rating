@@ -39,4 +39,5 @@ export interface PlaylistPost {
   comments: Comment[];
   createdAt: Date;
   userVote?: 'up' | 'down' | null;
+  coverImage?: string;
 }

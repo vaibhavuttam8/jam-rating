@@ -41,12 +41,13 @@ export const CreatePlaylistPage: React.FC = () => {
     setPlaylist([]);
   };
 
-  const handleCreatePlaylist = (name: string, description: string) => {
+  const handleCreatePlaylist = (name: string, description: string, coverImage?: string) => {
     mockAPI.createPlaylist({
       name,
       description,
       author: 'Anonymous User',
       songs: [...playlist],
+      coverImage,
     });
     
     setPlaylist([]);
